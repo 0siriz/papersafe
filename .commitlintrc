@@ -1,0 +1,12 @@
+TYPES=(
+	"feat"
+	"fix"
+	"chore"
+	"docs"
+	"perf"
+	"refactor"
+	"style"
+	"test"
+)
+SCOPES=()
+SUBJECT_MAX=50
