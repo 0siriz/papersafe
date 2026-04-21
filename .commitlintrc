@@ -8,5 +8,7 @@ TYPES=(
 	"style"
 	"test"
 )
-SCOPES=()
+SCOPES=(
+	"cli"
+)
 SUBJECT_MAX=50
