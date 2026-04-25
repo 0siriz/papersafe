@@ -10,5 +10,6 @@ TYPES=(
 )
 SCOPES=(
 	"cli"
+	"shamir"
 )
 SUBJECT_MAX=50
