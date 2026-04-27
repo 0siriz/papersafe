@@ -37,9 +37,9 @@ func makePolynomial(intercept, degree byte) (polynomial, error) {
 func interpolatePolynomial(xSamples, ySamples []byte, x byte) byte {
 	limit := len(xSamples)
 	var result, basis byte
-	for i := 0; i < limit; i++ {
+	for i := range limit {
 		basis = 1
-		for j := 0; j < limit; j++ {
+		for j := range limit {
 			if i == j {
 				continue
 			}
