@@ -11,5 +11,6 @@ TYPES=(
 SCOPES=(
 	"cli"
 	"shamir"
+	"mnemonic"
 )
 SUBJECT_MAX=50
