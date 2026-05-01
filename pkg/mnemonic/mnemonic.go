@@ -15,11 +15,21 @@ func EntropyToMnemonic(entropy []byte) ([]string, error) {
 	}
 
 	data := append(entropy, checksum)
+	var buffer uint32
+	var bitsInBuffer uint
 
 	words := make([]string, 0, 24)
-	for i := 0; i < len(data)*8/11; i++ {
-		idx := extractBits(data, i*11, 11)
-		words = append(words, wordlist[idx])
+	for _, b := range data {
+		buffer = (buffer << 8) | uint32(b)
+		bitsInBuffer += 8
+
+		if bitsInBuffer >= 11 {
+			bitsInBuffer -= 11
+			idx := int(buffer >> bitsInBuffer)
+			words = append(words, wordlist[idx])
+
+			buffer &= (1 << bitsInBuffer) - 1
+		}
 	}
 
 	return words, nil
@@ -73,21 +83,4 @@ func computeChecksum(entropy []byte) (byte, error) {
 		return 0, err
 	}
 	return h.Sum(nil)[0], nil
-}
-
-func extractBits(data []byte, start, length int) int {
-	startIdx := start / 8
-	endIdx := (start + length) / 8
-
-	var buffer uint32
-	for _, b := range data[startIdx : endIdx+1] {
-		buffer = (buffer << 8) | uint32(b)
-	}
-
-	shiftValue := 8 - ((start + length) % 8)
-	maskValue := (1 << length) - 1
-
-	result := (buffer >> shiftValue) & uint32(maskValue)
-
-	return int(result)
 }
