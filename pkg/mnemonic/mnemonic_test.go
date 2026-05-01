@@ -14,7 +14,7 @@ func testEntropy() []byte {
 	return e
 }
 
-func TestEntropyToMnemonic_Valid(t *testing.T) {
+func TestEntropyToMnemonicValid(t *testing.T) {
 	entropy := testEntropy()
 
 	words, err := EntropyToMnemonic(entropy)
@@ -33,7 +33,7 @@ func TestEntropyToMnemonic_Valid(t *testing.T) {
 	}
 }
 
-func TestEntropyToMnemonic_InvalidEntropyLength(t *testing.T) {
+func TestEntropyToMnemonicInvalidEntropyLength(t *testing.T) {
 	_, err := EntropyToMnemonic([]byte{1, 2, 3})
 
 	if err != ErrInvalidEntropy {
@@ -41,7 +41,7 @@ func TestEntropyToMnemonic_InvalidEntropyLength(t *testing.T) {
 	}
 }
 
-func TestMnemonicToEntropy_ValidRoundTrip(t *testing.T) {
+func TestMnemonicToEntropyValidRoundTrip(t *testing.T) {
 	entropy := testEntropy()
 
 	words, err := EntropyToMnemonic(entropy)
@@ -59,7 +59,7 @@ func TestMnemonicToEntropy_ValidRoundTrip(t *testing.T) {
 	}
 }
 
-func TestMnemonicToEntropy_InvalidLength(t *testing.T) {
+func TestMnemonicToEntropyInvalidLength(t *testing.T) {
 	words := []string{"abandon"} // too short
 
 	_, err := MnemonicToEntropy(words)
@@ -68,7 +68,7 @@ func TestMnemonicToEntropy_InvalidLength(t *testing.T) {
 	}
 }
 
-func TestMnemonicToEntropy_InvalidWord(t *testing.T) {
+func TestMnemonicToEntropyInvalidWord(t *testing.T) {
 	entropy := testEntropy()
 
 	words, err := EntropyToMnemonic(entropy)
@@ -88,7 +88,7 @@ func TestMnemonicToEntropy_InvalidWord(t *testing.T) {
 	}
 }
 
-func TestMnemonicToEntropy_InvalidChecksum(t *testing.T) {
+func TestMnemonicToEntropyInvalidChecksum(t *testing.T) {
 	entropy := testEntropy()
 
 	words, err := EntropyToMnemonic(entropy)
