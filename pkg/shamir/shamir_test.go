@@ -87,3 +87,60 @@ func TestSplitErrors(t *testing.T) {
 		t.Fatal("expected ErrEmptySecret")
 	}
 }
+
+func TestCombineFailsWithSealedShare(t *testing.T) {
+	secret := []byte("sealed-test")
+
+	parts := 5
+	threshold := 3
+
+	shares, err := Split(secret, parts, threshold)
+	if err != nil {
+		t.Fatalf("split failed: %v", err)
+	}
+
+	key := make([]byte, len(shares[0].Y))
+	for i := range key {
+		key[i] = 1
+	}
+
+	if err := shares[0].Seal(key); err != nil {
+		t.Fatalf("seal failed: %v", err)
+	}
+
+	_, err = Combine(shares[:threshold])
+	if err == nil {
+		t.Fatal("expected error when combining sealed shares")
+	}
+
+	if err != ErrSealedShareCombine {
+		t.Fatalf("expected ErrSealedShareCombine, got %v", err)
+	}
+}
+
+func TestCombineFailsIfAnyShareIsSealed(t *testing.T) {
+	secret := []byte("mixed-sealed")
+
+	shares, err := Split(secret, 4, 2)
+	if err != nil {
+		t.Fatalf("split failed: %v", err)
+	}
+
+	key := make([]byte, len(shares[1].Y))
+	for i := range key {
+		key[i] = byte(i + 1)
+	}
+
+	if err := shares[1].Seal(key); err != nil {
+		t.Fatalf("seal failed: %v", err)
+	}
+
+	_, err = Combine(shares[:2])
+	if err == nil {
+		t.Fatal("expected error when at least one share is sealed")
+	}
+
+	if err != ErrSealedShareCombine {
+		t.Fatalf("expected ErrSealedShareCombine, got %v", err)
+	}
+}
