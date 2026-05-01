@@ -1,12 +1,15 @@
 package shamir
 
+import "crypto/subtle"
+
 const (
 	ShareXSize = 1
 )
 
 type Share struct {
-	X byte
-	Y []byte
+	X      byte
+	Y      []byte
+	sealed bool
 }
 
 func (s *Share) AppendBinary(b []byte) ([]byte, error) {
@@ -33,6 +36,48 @@ func (s *Share) UnmarshalBinary(b []byte) error {
 
 	s.Y = make([]byte, len(buf))
 	copy(s.Y, buf)
+
+	return nil
+}
+
+func (s *Share) Sealed() bool {
+	return s.sealed
+}
+
+func (s *Share) Seal(key []byte) error {
+	if s.sealed {
+		return ErrInvalidSealCall
+	}
+
+	if err := s.seal(key); err != nil {
+		return err
+	}
+
+	s.sealed = true
+
+	return nil
+}
+
+func (s *Share) Unseal(key []byte) error {
+	if !s.sealed {
+		return ErrInvalidUnsealCall
+	}
+
+	if err := s.seal(key); err != nil {
+		return err
+	}
+
+	s.sealed = false
+
+	return nil
+}
+
+func (s *Share) seal(key []byte) error {
+	if len(key) != len(s.Y) {
+		return ErrInvalidSealKeyLength
+	}
+
+	_ = subtle.XORBytes(s.Y, s.Y, key)
 
 	return nil
 }

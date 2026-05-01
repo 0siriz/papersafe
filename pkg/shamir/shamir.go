@@ -62,6 +62,10 @@ func Combine(shares []Share) ([]byte, error) {
 
 	checkMap := make(map[byte]bool)
 	for i, share := range shares {
+		if share.sealed {
+			return nil, ErrSealedShareCombine
+		}
+
 		samp := share.X
 		if exists := checkMap[samp]; exists {
 			return nil, ErrDuplicateShares
