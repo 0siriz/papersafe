@@ -12,5 +12,6 @@ SCOPES=(
 	"cli"
 	"shamir"
 	"mnemonic"
+	"keyshard"
 )
 SUBJECT_MAX=50
