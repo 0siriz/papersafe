@@ -82,7 +82,7 @@ func (k *KeyShard) Verify() bool {
 	return ok
 }
 
-func ShareToKeyShard(share *shamir.Share, signKey ed25519.PrivateKey) (*KeyShard, []string, error) {
+func MakeKeyshard(share *shamir.Share, signKey ed25519.PrivateKey) (*KeyShard, []string, error) {
 	encKey := make([]byte, chacha20poly1305.KeySize)
 	rand.Read(encKey)
 
@@ -126,8 +126,8 @@ func ShareToKeyShard(share *shamir.Share, signKey ed25519.PrivateKey) (*KeyShard
 	return keyshard, words, nil
 }
 
-func KeyShardToShare(keyshard KeyShard, words []string) (*shamir.Share, error) {
-	if ok := keyshard.Verify(); !ok {
+func (k *KeyShard) ToShare(words []string) (*shamir.Share, error) {
+	if ok := k.Verify(); !ok {
 		return nil, ErrInvalidSignature
 	}
 
@@ -142,16 +142,16 @@ func KeyShardToShare(keyshard KeyShard, words []string) (*shamir.Share, error) {
 	}
 
 	additionalData := make([]byte, 0, PublicKeySize+IDSize)
-	additionalData = append(additionalData, keyshard.PublicKey...)
-	additionalData = append(additionalData, keyshard.ID)
+	additionalData = append(additionalData, k.PublicKey...)
+	additionalData = append(additionalData, k.ID)
 
-	cleartext, err := aead.Open(nil, keyshard.Nonce, keyshard.Content, additionalData)
+	cleartext, err := aead.Open(nil, k.Nonce, k.Content, additionalData)
 	if err != nil {
 		return nil, err
 	}
 
 	share := &shamir.Share{
-		X: keyshard.ID,
+		X: k.ID,
 		Y: cleartext,
 	}
 

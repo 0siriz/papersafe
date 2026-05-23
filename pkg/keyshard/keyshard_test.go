@@ -110,7 +110,7 @@ func TestShareToKeyShardRoundtrip(t *testing.T) {
 
 	share := makeTestShare()
 
-	ks, words, err := ShareToKeyShard(share, priv)
+	ks, words, err := MakeKeyshard(share, priv)
 	if err != nil {
 		t.Fatalf("ShareToKeyShard failed: %v", err)
 	}
@@ -119,7 +119,7 @@ func TestShareToKeyShardRoundtrip(t *testing.T) {
 		t.Fatal("expected valid signature")
 	}
 
-	recovered, err := KeyShardToShare(*ks, words)
+	recovered, err := ks.ToShare(words)
 	if err != nil {
 		t.Fatalf("KeyShardToShare failed: %v", err)
 	}
@@ -138,7 +138,7 @@ func TestKeyShardToShareWrongMnemonicFails(t *testing.T) {
 
 	share := makeTestShare()
 
-	ks, _, err := ShareToKeyShard(share, priv)
+	ks, _, err := MakeKeyshard(share, priv)
 	if err != nil {
 		t.Fatalf("ShareToKeyShard failed: %v", err)
 	}
@@ -146,7 +146,7 @@ func TestKeyShardToShareWrongMnemonicFails(t *testing.T) {
 	// Wrong words (same length but different)
 	wrongWords := []string{"abandon", "abandon", "abandon", "abandon"}
 
-	_, err = KeyShardToShare(*ks, wrongWords)
+	_, err = ks.ToShare(wrongWords)
 	if err == nil {
 		t.Fatal("expected decryption failure with wrong mnemonic")
 	}
@@ -157,7 +157,7 @@ func TestKeyShardToShareInvalidSignature(t *testing.T) {
 
 	share := makeTestShare()
 
-	ks, words, err := ShareToKeyShard(share, priv)
+	ks, words, err := MakeKeyshard(share, priv)
 	if err != nil {
 		t.Fatalf("ShareToKeyShard failed: %v", err)
 	}
@@ -165,7 +165,7 @@ func TestKeyShardToShareInvalidSignature(t *testing.T) {
 	// Corrupt signature
 	ks.Signature[0] ^= 0xFF
 
-	_, err = KeyShardToShare(*ks, words)
+	_, err = ks.ToShare(words)
 	if err == nil {
 		t.Fatal("expected failure due to invalid signature")
 	}
@@ -180,7 +180,7 @@ func TestAEADAdditionalDataBinding(t *testing.T) {
 
 	share := makeTestShare()
 
-	ks, words, err := ShareToKeyShard(share, priv)
+	ks, words, err := MakeKeyshard(share, priv)
 	if err != nil {
 		t.Fatalf("ShareToKeyShard failed: %v", err)
 	}
@@ -188,7 +188,7 @@ func TestAEADAdditionalDataBinding(t *testing.T) {
 	// Modify ID → should break AEAD
 	ks.ID ^= 0xFF
 
-	_, err = KeyShardToShare(*ks, words)
+	_, err = ks.ToShare(words)
 	if err == nil {
 		t.Fatal("expected failure due to modified additional data")
 	}
