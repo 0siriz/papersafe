@@ -28,7 +28,7 @@ func Split(secret []byte, parts, threshold int) ([]Share, error) {
 	}
 
 	for idx, val := range secret {
-		p, err := makePolynomial(val, byte(threshold-1))
+		p, err := makePolynomial(val, byte((threshold-1)&0xFF))
 		if err != nil {
 			return nil, err
 		}

@@ -50,12 +50,12 @@ func MnemonicToEntropy(words []string) ([]byte, error) {
 			return nil, &InvalidWordError{BadWord: w}
 		}
 
-		buffer = (buffer << 11) | uint32(idx)
+		buffer = (buffer << 11) | uint32(idx&0x7FF) // idx is 11 bits
 		bitsInBuffer += 11
 
 		for bitsInBuffer >= 8 {
 			bitsInBuffer -= 8
-			byteVal := byte(buffer >> bitsInBuffer)
+			byteVal := byte((buffer >> bitsInBuffer) & 0xFF)
 			data = append(data, byteVal)
 
 			buffer &= (1 << bitsInBuffer) - 1
