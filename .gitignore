@@ -19,7 +19,7 @@
 !Makefile
 !.editorconfig
 !.commitlintrc
-!.golangci-lint.yml
+!.golangci.yml
 
 # ...even if they are in subdirectories
 !*/
