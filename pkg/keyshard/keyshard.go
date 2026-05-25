@@ -25,6 +25,15 @@ type KeyShard struct {
 	Signature []byte
 }
 
+type ShardSet struct {
+	Shard KeyShard
+	Words []string
+}
+
+func (ss *ShardSet) Open() (*shamir.Share, error) {
+	return ss.Shard.ToShare(ss.Words)
+}
+
 func (k *KeyShard) AppendBinary(b []byte) ([]byte, error) {
 	b = append(b, k.PublicKey...)
 	b = append(b, k.ID)
@@ -70,7 +79,6 @@ func (k *KeyShard) UnmarshalBinary(b []byte) error {
 }
 
 func (k *KeyShard) Verify() bool {
-
 	signData := make([]byte, 0, PublicKeySize+IDSize+NonceSize+len(k.Content))
 	signData = append(signData, k.PublicKey...)
 	signData = append(signData, k.ID)
@@ -82,13 +90,13 @@ func (k *KeyShard) Verify() bool {
 	return ok
 }
 
-func MakeKeyshard(share *shamir.Share, signKey ed25519.PrivateKey) (*KeyShard, []string, error) {
+func MakeKeyshard(share *shamir.Share, signKey ed25519.PrivateKey) (*ShardSet, error) {
 	encKey := make([]byte, chacha20poly1305.KeySize)
 	rand.Read(encKey)
 
 	aead, err := chacha20poly1305.NewX(encKey)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	nonce := make([]byte, NonceSize)
@@ -120,10 +128,10 @@ func MakeKeyshard(share *shamir.Share, signKey ed25519.PrivateKey) (*KeyShard, [
 
 	words, err := mnemonic.EntropyToMnemonic(encKey)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return keyshard, words, nil
+	return &ShardSet{Shard: *keyshard, Words: words}, nil
 }
 
 func (k *KeyShard) ToShare(words []string) (*shamir.Share, error) {

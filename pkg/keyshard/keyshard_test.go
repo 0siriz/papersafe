@@ -110,18 +110,18 @@ func TestShareToKeyShardRoundtrip(t *testing.T) {
 
 	share := makeTestShare()
 
-	ks, words, err := MakeKeyshard(share, priv)
+	ss, err := MakeKeyshard(share, priv)
 	if err != nil {
-		t.Fatalf("ShareToKeyShard failed: %v", err)
+		t.Fatalf("MakeKeyshard failed: %v", err)
 	}
 
-	if !ks.Verify() {
+	if !ss.Shard.Verify() {
 		t.Fatal("expected valid signature")
 	}
 
-	recovered, err := ks.ToShare(words)
+	recovered, err := ss.Open()
 	if err != nil {
-		t.Fatalf("KeyShardToShare failed: %v", err)
+		t.Fatalf("Open failed: %v", err)
 	}
 
 	if share.X != recovered.X {
@@ -138,15 +138,15 @@ func TestKeyShardToShareWrongMnemonicFails(t *testing.T) {
 
 	share := makeTestShare()
 
-	ks, _, err := MakeKeyshard(share, priv)
+	ss, err := MakeKeyshard(share, priv)
 	if err != nil {
-		t.Fatalf("ShareToKeyShard failed: %v", err)
+		t.Fatalf("MakeKeyshard failed: %v", err)
 	}
 
 	// Wrong words (same length but different)
 	wrongWords := []string{"abandon", "abandon", "abandon", "abandon"}
 
-	_, err = ks.ToShare(wrongWords)
+	_, err = ss.Shard.ToShare(wrongWords)
 	if err == nil {
 		t.Fatal("expected decryption failure with wrong mnemonic")
 	}
@@ -157,15 +157,15 @@ func TestKeyShardToShareInvalidSignature(t *testing.T) {
 
 	share := makeTestShare()
 
-	ks, words, err := MakeKeyshard(share, priv)
+	ss, err := MakeKeyshard(share, priv)
 	if err != nil {
-		t.Fatalf("ShareToKeyShard failed: %v", err)
+		t.Fatalf("MakeKeyshard failed: %v", err)
 	}
 
 	// Corrupt signature
-	ks.Signature[0] ^= 0xFF
+	ss.Shard.Signature[0] ^= 0xFF
 
-	_, err = ks.ToShare(words)
+	_, err = ss.Shard.ToShare(ss.Words)
 	if err == nil {
 		t.Fatal("expected failure due to invalid signature")
 	}
@@ -180,15 +180,15 @@ func TestAEADAdditionalDataBinding(t *testing.T) {
 
 	share := makeTestShare()
 
-	ks, words, err := MakeKeyshard(share, priv)
+	ss, err := MakeKeyshard(share, priv)
 	if err != nil {
-		t.Fatalf("ShareToKeyShard failed: %v", err)
+		t.Fatalf("MakeKeyshard failed: %v", err)
 	}
 
 	// Modify ID → should break AEAD
-	ks.ID ^= 0xFF
+	ss.Shard.ID ^= 0xFF
 
-	_, err = ks.ToShare(words)
+	_, err = ss.Shard.ToShare(ss.Words)
 	if err == nil {
 		t.Fatal("expected failure due to modified additional data")
 	}
