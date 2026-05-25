@@ -5,6 +5,9 @@ import (
 	"math/big"
 )
 
+// Split generates the given number of shares from a secret using a
+// polynomial of degree threshold-1 over GF(2^8). Any threshold shares can
+// reconstruct the secret.
 func Split(secret []byte, parts, threshold int) ([]Share, error) {
 	if parts < threshold {
 		return nil, ErrInvalidParts
@@ -43,6 +46,9 @@ func Split(secret []byte, parts, threshold int) ([]Share, error) {
 	return out, nil
 }
 
+// Combine reconstructs the original secret from a set of shares using
+// Lagrange interpolation over GF(2^8). At least two shares must be
+// provided, and all shares must have the same Y length.
 func Combine(shares []Share) ([]byte, error) {
 	if len(shares) < 2 {
 		return nil, ErrNotEnoughShares
