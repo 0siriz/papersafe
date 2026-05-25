@@ -15,6 +15,7 @@ var rootCmd = &cobra.Command{
 	},
 }
 
+// main is the papersafe CLI entry point.
 func main() {
 	if err := rootCmd.Execute(); err != nil {
 		panic(err)

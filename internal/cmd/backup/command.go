@@ -2,6 +2,7 @@ package backup
 
 import "github.com/spf13/cobra"
 
+// NewCommand returns the "backup" subcommand.
 func NewCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "backup",

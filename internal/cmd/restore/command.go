@@ -2,6 +2,7 @@ package restore
 
 import "github.com/spf13/cobra"
 
+// NewCommand returns the "restore" subcommand.
 func NewCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "restore",
