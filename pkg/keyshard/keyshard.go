@@ -11,9 +11,9 @@ import (
 
 const (
 	IDSize             = 1
-	PublicKeySize      = 32
-	NonceSize          = 24
-	SignatureSize      = 64
+	PublicKeySize      = ed25519.PublicKeySize
+	NonceSize          = chacha20poly1305.NonceSizeX
+	SignatureSize      = ed25519.SignatureSize
 	KeyShardStaticSize = IDSize + PublicKeySize + NonceSize + SignatureSize
 )
 
