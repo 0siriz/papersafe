@@ -8,12 +8,20 @@ import (
 )
 
 const (
-	QuorumKeySize        = 32
+	// QuorumKeySize is the byte size of the quorum encryption key.
+	QuorumKeySize = 32
+	// QuorumSigningKeySize is the byte size of the Ed25519 private key.
 	QuorumSigningKeySize = ed25519.PrivateKeySize
 
-	SecretFlagSize     = 1
+	// SecretFlagSize is the byte size of the sealed/unsealed flag in the
+	// Shamir secret.
+	SecretFlagSize = 1
+	// SecretFlagUnsealed marks a quorum secret as unsealed (signing key
+	// included in the split).
 	SecretFlagUnsealed = 0
-	SecretFlagSealed   = 1
+	// SecretFlagSealed marks a quorum secret as sealed (signing key excluded
+	// from the split).
+	SecretFlagSealed = 1
 )
 
 // Quorum holds the encryption key and optional signing key for shard
