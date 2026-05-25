@@ -4,6 +4,8 @@ import (
 	"crypto/sha256"
 )
 
+// EntropyToMnemonic converts 32 bytes of entropy into a 24-word BIP39
+// mnemonic. The last word encodes an 8-bit SHA-256 checksum of the entropy.
 func EntropyToMnemonic(entropy []byte) ([]string, error) {
 	if len(entropy) != 32 {
 		return nil, ErrInvalidEntropy
@@ -35,6 +37,8 @@ func EntropyToMnemonic(entropy []byte) ([]string, error) {
 	return words, nil
 }
 
+// MnemonicToEntropy converts a 24-word BIP39 mnemonic back into the
+// original 32 bytes of entropy, verifying the embedded checksum.
 func MnemonicToEntropy(words []string) ([]byte, error) {
 	if len(words) != 24 {
 		return nil, ErrInvalidMnemonic
