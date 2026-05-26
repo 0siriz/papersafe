@@ -90,6 +90,32 @@ func TestQuorumDestroy(t *testing.T) {
 	}
 }
 
+func TestReconstructQuorumPublicKeyMismatch(t *testing.T) {
+	q1, err := NewQuorum()
+	if err != nil {
+		t.Fatalf("NewQuorum failed: %v", err)
+	}
+	q2, err := NewQuorum()
+	if err != nil {
+		t.Fatalf("NewQuorum failed: %v", err)
+	}
+
+	sets1, err := q1.MakeKeyshards(3, 2)
+	if err != nil {
+		t.Fatalf("MakeKeyshards failed: %v", err)
+	}
+	sets2, err := q2.MakeKeyshards(3, 2)
+	if err != nil {
+		t.Fatalf("MakeKeyshards failed: %v", err)
+	}
+
+	mixed := []ShardSet{sets1[0], sets2[1]}
+	_, err = ReconstructQuorum(mixed)
+	if err != ErrPublicKeyMismatch {
+		t.Fatalf("expected ErrPublicKeyMismatch, got %v", err)
+	}
+}
+
 func TestQuorumMultipleIssuesUnsealed(t *testing.T) {
 	q, err := NewQuorum()
 	if err != nil {
