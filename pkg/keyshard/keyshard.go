@@ -52,7 +52,7 @@ type ShardSet struct {
 // Open decrypts the shard using the mnemonic words and returns the
 // underlying Shamir share. It verifies the shard signature before
 // decrypting.
-func (ss *ShardSet) Open() (*shamir.Share, error) {
+func (ss *ShardSet) Open() (shamir.Share, error) {
 	return ss.Shard.ToShare(ss.Words)
 }
 
@@ -120,13 +120,13 @@ func (k *KeyShard) Verify() bool {
 // MakeKeyshard encrypts a Shamir share, signs it, and encodes the
 // encryption key as a BIP39 mnemonic. The returned ShardSet pairs the
 // encrypted shard with the mnemonic words.
-func MakeKeyshard(share *shamir.Share, signKey ed25519.PrivateKey) (*ShardSet, error) {
+func MakeKeyshard(share shamir.Share, signKey ed25519.PrivateKey) (ShardSet, error) {
 	encKey := make([]byte, chacha20poly1305.KeySize)
 	rand.Read(encKey)
 
 	aead, err := chacha20poly1305.NewX(encKey)
 	if err != nil {
-		return nil, err
+		return ShardSet{}, err
 	}
 
 	nonce := make([]byte, NonceSize)
@@ -148,7 +148,7 @@ func MakeKeyshard(share *shamir.Share, signKey ed25519.PrivateKey) (*ShardSet, e
 
 	signature := ed25519.Sign(signKey, signData)
 
-	keyshard := &KeyShard{
+	keyshard := KeyShard{
 		PublicKey: pubSignKey,
 		ID:        share.X,
 		Nonce:     nonce,
@@ -158,27 +158,27 @@ func MakeKeyshard(share *shamir.Share, signKey ed25519.PrivateKey) (*ShardSet, e
 
 	words, err := mnemonic.EntropyToMnemonic(encKey)
 	if err != nil {
-		return nil, err
+		return ShardSet{}, err
 	}
 
-	return &ShardSet{Shard: *keyshard, Words: words}, nil
+	return ShardSet{Shard: keyshard, Words: words}, nil
 }
 
 // ToShare verifies the shard signature, decrypts the content using the
 // mnemonic-encoded key, and returns the underlying Shamir share.
-func (k *KeyShard) ToShare(words []string) (*shamir.Share, error) {
+func (k *KeyShard) ToShare(words []string) (shamir.Share, error) {
 	if ok := k.Verify(); !ok {
-		return nil, ErrInvalidSignature
+		return shamir.Share{}, ErrInvalidSignature
 	}
 
 	encKey, err := mnemonic.MnemonicToEntropy(words)
 	if err != nil {
-		return nil, err
+		return shamir.Share{}, err
 	}
 
 	aead, err := chacha20poly1305.NewX(encKey)
 	if err != nil {
-		return nil, err
+		return shamir.Share{}, err
 	}
 
 	additionalData := make([]byte, 0, PublicKeySize+IDSize)
@@ -187,10 +187,10 @@ func (k *KeyShard) ToShare(words []string) (*shamir.Share, error) {
 
 	cleartext, err := aead.Open(nil, k.Nonce, k.Content, additionalData)
 	if err != nil {
-		return nil, err
+		return shamir.Share{}, err
 	}
 
-	share := &shamir.Share{
+	share := shamir.Share{
 		X: k.ID,
 		Y: cleartext,
 	}

@@ -8,8 +8,8 @@ import (
 	"github.com/0siriz/papersafe/pkg/shamir"
 )
 
-func makeTestShare() *shamir.Share {
-	return &shamir.Share{
+func makeTestShare() shamir.Share {
+	return shamir.Share{
 		X: 7,
 		Y: []byte{1, 2, 3, 4, 5},
 	}

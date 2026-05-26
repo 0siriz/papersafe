@@ -100,11 +100,10 @@ func (q *Quorum) MakeKeyshards(parts, threshold int) ([]ShardSet, error) {
 
 	shardSets := make([]ShardSet, parts)
 	for i, share := range shares {
-		ss, err := MakeKeyshard(&share, signKey)
+		shardSets[i], err = MakeKeyshard(share, signKey)
 		if err != nil {
 			return nil, err
 		}
-		shardSets[i] = *ss
 	}
 
 	return shardSets, nil
@@ -129,7 +128,7 @@ func ReconstructQuorum(shardSets []ShardSet) (*Quorum, error) {
 		if err != nil {
 			return nil, err
 		}
-		shares[i] = *share
+		shares[i] = share
 	}
 
 	secret, err := shamir.Combine(shares)
