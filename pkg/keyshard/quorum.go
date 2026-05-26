@@ -1,6 +1,7 @@
 package keyshard
 
 import (
+	"bytes"
 	"crypto/ed25519"
 	"crypto/rand"
 
@@ -109,11 +110,18 @@ func (q *Quorum) MakeKeyshards(parts, threshold int) ([]ShardSet, error) {
 	return shardSets, nil
 }
 
-// ReconstructQuorum recovers a Quorum from its shards. If the shards were
-// created by an unsealed quorum, both the encryption key and signing key are
-// recovered. Sealed shards yield only the encryption key, preventing new shard
-// issuance.
+// ReconstructQuorum recovers a Quorum from its shards. All shards must have
+// been issued by the same quorum (same public key). If the shards were created
+// by an unsealed quorum, both the encryption key and signing key are recovered.
+// Sealed shards yield only the encryption key, preventing new shard issuance.
 func ReconstructQuorum(shardSets []ShardSet) (*Quorum, error) {
+	pub := shardSets[0].Shard.PublicKey
+	for _, ss := range shardSets[1:] {
+		if !bytes.Equal(pub, ss.Shard.PublicKey) {
+			return nil, ErrPublicKeyMismatch
+		}
+	}
+
 	shares := make([]shamir.Share, len(shardSets))
 
 	for i, ss := range shardSets {
