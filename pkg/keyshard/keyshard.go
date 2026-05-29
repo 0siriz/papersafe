@@ -112,9 +112,7 @@ func (k *KeyShard) Verify() bool {
 	signData = append(signData, k.Nonce...)
 	signData = append(signData, k.Content...)
 
-	ok := ed25519.Verify(k.PublicKey, signData, k.Signature)
-
-	return ok
+	return ed25519.Verify(k.PublicKey, signData, k.Signature)
 }
 
 // MakeKeyshard encrypts a Shamir share, signs it, and encodes the
@@ -190,10 +188,8 @@ func (k *KeyShard) ToShare(words []string) (shamir.Share, error) {
 		return shamir.Share{}, err
 	}
 
-	share := shamir.Share{
+	return shamir.Share{
 		X: k.ID,
 		Y: cleartext,
-	}
-
-	return share, nil
+	}, nil
 }
