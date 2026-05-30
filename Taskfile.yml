@@ -1,0 +1,55 @@
+# yaml-language-server: $schema=https://taskfile.dev/static/schema.json
+version: "3"
+
+vars:
+  BINDIR: bin
+
+tasks:
+  default:
+    deps: [build]
+
+  build:
+    desc: Build all binaries
+    cmds:
+      - go build -buildmode=pie -trimpath -o "{{.BINDIR}}/papersafe" ./cmd/papersafe
+    sources:
+      - "**/*.go"
+      - go.mod
+      - go.sum
+    generates:
+      - "{{.BINDIR}}/*"
+
+  test:
+    desc: Run tests
+    cmds:
+      - go test ./...
+
+  lint:
+    desc: Run golangci-lint
+    cmds:
+      - golangci-lint run ./...
+
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - go clean
+      - rm -rf "{{.BINDIR}}"
+
+  fmt:
+    desc: Format Go source code
+    cmds:
+      - gofmt -s -w .
+
+  vet:
+    desc: Run go vet
+    cmds:
+      - go vet ./...
+
+  tidy:
+    desc: Tidy Go module dependencies
+    cmds:
+      - go mod tidy
+
+  check:
+    desc: Run all checks (fmt, vet, lint)
+    deps: [fmt, vet, lint]

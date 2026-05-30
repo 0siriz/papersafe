@@ -16,7 +16,7 @@
 
 !README.md
 !LICENSE
-!Makefile
+!Taskfile.yml
 !.editorconfig
 !.commitlintrc
 !.golangci.yml
