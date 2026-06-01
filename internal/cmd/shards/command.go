@@ -8,10 +8,9 @@ func NewCommand() *cobra.Command {
 		Use:     "shards",
 		Short:   "Manage keyshards",
 		Aliases: []string{"s"},
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return nil
-		},
 	}
+
+	cmd.AddCommand(generateCommand())
 
 	return cmd
 }
