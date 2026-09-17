@@ -1,6 +1,9 @@
 package shards
 
 import (
+	"fmt"
+
+	"github.com/0siriz/papersafe/internal/paper"
 	"github.com/0siriz/papersafe/pkg/keyshard"
 	"github.com/spf13/cobra"
 )
@@ -24,8 +27,23 @@ func generateCommand() *cobra.Command {
 				return err
 			}
 
-			// TODO: Make PDF files
-			_ = shardSets
+			for _, shardSet := range shardSets {
+				shard := shardSet.Shard
+				m, err := paper.GetKeyshard(shard)
+				if err != nil {
+					return err
+				}
+
+				document, err := m.Generate()
+				if err != nil {
+					return err
+				}
+
+				if err := document.Save(fmt.Sprintf("keyshard-%d.pdf", shard.ID)); err != nil {
+					return err
+				}
+
+			}
 
 			return nil
 		},
