@@ -13,5 +13,6 @@ SCOPES=(
 	"shamir"
 	"mnemonic"
 	"keyshard"
+	"paper"
 )
 SUBJECT_MAX=50
