@@ -12,6 +12,8 @@ import (
 const (
 	// IDSize is the byte size of the KeyShard ID field.
 	IDSize = 1
+	// ThresholdSize is the byte size of the KeyShard threshold field.
+	ThresholdSize = 1
 	// PublicKeySize is the byte size of an Ed25519 public key.
 	PublicKeySize = ed25519.PublicKeySize
 	// NonceSize is the byte size of the XChaCha20-Poly1305 nonce.
@@ -19,9 +21,9 @@ const (
 	// SignatureSize is the byte size of an Ed25519 signature.
 	SignatureSize = ed25519.SignatureSize
 	// KeyShardStaticSize is the total byte size of the fixed-length fields in
-	// a KeyShard (ID + PublicKey + Nonce + Signature), excluding the variable-
-	// length Content.
-	KeyShardStaticSize = IDSize + PublicKeySize + NonceSize + SignatureSize
+	// a KeyShard (ID + Threshold + PublicKey + Nonce + Signature), excluding
+	// the variable-length Content.
+	KeyShardStaticSize = IDSize + ThresholdSize + PublicKeySize + NonceSize + SignatureSize
 )
 
 // KeyShard is an encrypted, signed Shamir share. It contains the encrypted
@@ -32,6 +34,8 @@ type KeyShard struct {
 	PublicKey []byte
 	// ID is the share index (X coordinate).
 	ID byte
+	// Threshold is the number of shards required to reconstruct the quorum.
+	Threshold byte
 	// Nonce is the XChaCha20-Poly1305 nonce used for encryption.
 	Nonce []byte
 	// Content is the encrypted Y values of the Shamir share.
@@ -60,6 +64,7 @@ func (ss *ShardSet) Open() (shamir.Share, error) {
 func (k *KeyShard) AppendBinary(b []byte) ([]byte, error) {
 	b = append(b, k.PublicKey...)
 	b = append(b, k.ID)
+	b = append(b, k.Threshold)
 	b = append(b, k.Nonce...)
 	b = append(b, k.Content...)
 	b = append(b, k.Signature...)
@@ -88,6 +93,9 @@ func (k *KeyShard) UnmarshalBinary(b []byte) error {
 	k.ID = buf[0]
 	buf = buf[IDSize:]
 
+	k.Threshold = buf[0]
+	buf = buf[ThresholdSize:]
+
 	k.Nonce = make([]byte, NonceSize)
 	copy(k.Nonce, buf[:NonceSize])
 	buf = buf[NonceSize:]
@@ -106,9 +114,10 @@ func (k *KeyShard) UnmarshalBinary(b []byte) error {
 // Verify checks the Ed25519 signature against the shard data using the
 // embedded public key. Returns true if the signature is valid.
 func (k *KeyShard) Verify() bool {
-	signData := make([]byte, 0, PublicKeySize+IDSize+NonceSize+len(k.Content))
+	signData := make([]byte, 0, PublicKeySize+IDSize+ThresholdSize+NonceSize+len(k.Content))
 	signData = append(signData, k.PublicKey...)
 	signData = append(signData, k.ID)
+	signData = append(signData, k.Threshold)
 	signData = append(signData, k.Nonce...)
 	signData = append(signData, k.Content...)
 
@@ -118,7 +127,13 @@ func (k *KeyShard) Verify() bool {
 // MakeKeyshard encrypts a Shamir share, signs it, and encodes the
 // encryption key as a BIP39 mnemonic. The returned ShardSet pairs the
 // encrypted shard with the mnemonic words.
-func MakeKeyshard(share shamir.Share, signKey ed25519.PrivateKey) (ShardSet, error) {
+func MakeKeyshard(share shamir.Share, signKey ed25519.PrivateKey, threshold int) (ShardSet, error) {
+	if threshold < 2 || threshold > 255 {
+		return ShardSet{}, ErrInvalidThreshold
+	}
+
+	thresholdByte := byte(threshold)
+
 	encKey := make([]byte, chacha20poly1305.KeySize)
 	rand.Read(encKey)
 
@@ -132,15 +147,17 @@ func MakeKeyshard(share shamir.Share, signKey ed25519.PrivateKey) (ShardSet, err
 
 	signPubKey := signKey.Public().(ed25519.PublicKey)
 
-	additionalData := make([]byte, 0, PublicKeySize+IDSize)
+	additionalData := make([]byte, 0, PublicKeySize+IDSize+ThresholdSize)
 	additionalData = append(additionalData, signPubKey...)
 	additionalData = append(additionalData, share.X)
+	additionalData = append(additionalData, thresholdByte)
 
 	content := aead.Seal(nil, nonce, share.Y, additionalData)
 
-	signData := make([]byte, 0, PublicKeySize+IDSize+NonceSize+len(content))
+	signData := make([]byte, 0, PublicKeySize+IDSize+ThresholdSize+NonceSize+len(content))
 	signData = append(signData, signPubKey...)
 	signData = append(signData, share.X)
+	signData = append(signData, thresholdByte)
 	signData = append(signData, nonce...)
 	signData = append(signData, content...)
 
@@ -149,6 +166,7 @@ func MakeKeyshard(share shamir.Share, signKey ed25519.PrivateKey) (ShardSet, err
 	keyshard := KeyShard{
 		PublicKey: signPubKey,
 		ID:        share.X,
+		Threshold: thresholdByte,
 		Nonce:     nonce,
 		Content:   content,
 		Signature: signature,
@@ -179,9 +197,10 @@ func (k *KeyShard) ToShare(words []string) (shamir.Share, error) {
 		return shamir.Share{}, err
 	}
 
-	additionalData := make([]byte, 0, PublicKeySize+IDSize)
+	additionalData := make([]byte, 0, PublicKeySize+IDSize+ThresholdSize)
 	additionalData = append(additionalData, k.PublicKey...)
 	additionalData = append(additionalData, k.ID)
+	additionalData = append(additionalData, k.Threshold)
 
 	cleartext, err := aead.Open(nil, k.Nonce, k.Content, additionalData)
 	if err != nil {

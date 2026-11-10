@@ -34,14 +34,23 @@ func GetKeyshard(shard keyshard.KeyShard) (core.Maroto, error) {
 		}),
 	)
 	m.AddRow(10,
-		text.NewCol(12, "Shard ID:", props.Text{
+		text.NewCol(6, "Shard ID:", props.Text{
+			Size:   18,
+			Style:  fontstyle.Bold,
+			Family: liberationMono,
+		}),
+		text.NewCol(6, "Threshold:", props.Text{
 			Size:   18,
 			Style:  fontstyle.Bold,
 			Family: liberationMono,
 		}),
 	)
 	m.AddRow(8,
-		text.NewCol(12, fmt.Sprintf("%02x", shard.ID), props.Text{
+		text.NewCol(6, fmt.Sprintf("%d", shard.ID), props.Text{
+			Size:   12,
+			Family: liberationMono,
+		}),
+		text.NewCol(6, fmt.Sprintf("%d", shard.Threshold), props.Text{
 			Size:   12,
 			Family: liberationMono,
 		}),
@@ -67,7 +76,7 @@ func GetKeyshard(shard keyshard.KeyShard) (core.Maroto, error) {
 		return nil, err
 	}
 
-	shardPayload := payload.NewKeyshard(shard.ID, shardData)
+	shardPayload := payload.NewKeyshard(shard.ID, shard.Threshold, shardData)
 	shardPayloadData, err := shardPayload.MarshalText()
 	if err != nil {
 		return nil, err

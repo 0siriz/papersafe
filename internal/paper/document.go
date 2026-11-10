@@ -114,14 +114,14 @@ func GetDocument(quorum keyshard.Quorum, id string, data []byte) (core.Maroto, e
 // chunkDocumentData splits data into indexed payloads carrying at most
 // documentChunkSize bytes each. Empty data still produces a single payload so
 // the document always has a QR code representing it.
-func chunkDocumentData(data []byte) []payload.Payload {
+func chunkDocumentData(data []byte) []payload.Document {
 	total := max(1, (len(data)+documentChunkSize-1)/documentChunkSize)
 
-	chunks := make([]payload.Payload, total)
+	chunks := make([]payload.Document, total)
 	for i := range total {
 		start := i * documentChunkSize
 		end := min(start+documentChunkSize, len(data))
-		chunks[i] = payload.NewChunk(payload.DomainDocument, i+1, total, data[start:end])
+		chunks[i] = payload.NewDocument(i+1, total, data[start:end])
 	}
 
 	return chunks
