@@ -102,7 +102,7 @@ func (q *Quorum) MakeKeyshards(parts, threshold int) ([]ShardSet, error) {
 
 	shardSets := make([]ShardSet, parts)
 	for i, share := range shares {
-		shardSets[i], err = MakeKeyshard(share, signKey)
+		shardSets[i], err = MakeKeyshard(share, signKey, threshold)
 		if err != nil {
 			return nil, err
 		}
@@ -116,6 +116,25 @@ func (q *Quorum) MakeKeyshards(parts, threshold int) ([]ShardSet, error) {
 // by an unsealed quorum, both the encryption key and signing key are recovered.
 // Sealed shards yield only the encryption key, preventing new shard issuance.
 func ReconstructQuorum(shardSets []ShardSet) (*Quorum, error) {
+	if len(shardSets) == 0 {
+		return nil, ErrNotEnoughShards
+	}
+
+	threshold := int(shardSets[0].Shard.Threshold)
+	if threshold < 2 {
+		return nil, ErrInvalidThreshold
+	}
+
+	for _, ss := range shardSets[1:] {
+		if ss.Shard.Threshold != shardSets[0].Shard.Threshold {
+			return nil, ErrMismatchedThreshold
+		}
+	}
+
+	if len(shardSets) < threshold {
+		return nil, ErrNotEnoughShards
+	}
+
 	pub := shardSets[0].Shard.PublicKey
 	for _, ss := range shardSets[1:] {
 		if !bytes.Equal(pub, ss.Shard.PublicKey) {

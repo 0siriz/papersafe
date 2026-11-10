@@ -90,6 +90,100 @@ func TestQuorumDestroy(t *testing.T) {
 	}
 }
 
+func TestMakeKeyshardsSetsThreshold(t *testing.T) {
+	q, err := NewQuorum()
+	if err != nil {
+		t.Fatalf("NewQuorum failed: %v", err)
+	}
+
+	shardSets, err := q.MakeKeyshards(5, 3)
+	if err != nil {
+		t.Fatalf("MakeKeyshards failed: %v", err)
+	}
+
+	for i, ss := range shardSets {
+		if ss.Shard.Threshold != 3 {
+			t.Fatalf("shard set %d has threshold %d, want 3", i, ss.Shard.Threshold)
+		}
+	}
+}
+
+func TestReconstructQuorumEmpty(t *testing.T) {
+	if _, err := ReconstructQuorum(nil); err != ErrNotEnoughShards {
+		t.Fatalf("expected ErrNotEnoughShards, got %v", err)
+	}
+}
+
+func TestReconstructQuorumWithThreshold(t *testing.T) {
+	q, err := NewQuorum()
+	if err != nil {
+		t.Fatalf("NewQuorum failed: %v", err)
+	}
+
+	shardSets, err := q.MakeKeyshards(5, 3)
+	if err != nil {
+		t.Fatalf("MakeKeyshards failed: %v", err)
+	}
+
+	reconstructed, err := ReconstructQuorum(shardSets[:3])
+	if err != nil {
+		t.Fatalf("ReconstructQuorum failed: %v", err)
+	}
+	if !bytes.Equal(q.Key, reconstructed.Key) {
+		t.Fatal("Key mismatch")
+	}
+}
+
+func TestReconstructQuorumNotEnoughShards(t *testing.T) {
+	q, err := NewQuorum()
+	if err != nil {
+		t.Fatalf("NewQuorum failed: %v", err)
+	}
+
+	shardSets, err := q.MakeKeyshards(5, 3)
+	if err != nil {
+		t.Fatalf("MakeKeyshards failed: %v", err)
+	}
+
+	if _, err := ReconstructQuorum(shardSets[:2]); err != ErrNotEnoughShards {
+		t.Fatalf("expected ErrNotEnoughShards, got %v", err)
+	}
+}
+
+func TestReconstructQuorumMismatchedThreshold(t *testing.T) {
+	q, err := NewQuorum()
+	if err != nil {
+		t.Fatalf("NewQuorum failed: %v", err)
+	}
+
+	shardSets, err := q.MakeKeyshards(5, 3)
+	if err != nil {
+		t.Fatalf("MakeKeyshards failed: %v", err)
+	}
+	shardSets[1].Shard.Threshold = 2
+
+	if _, err := ReconstructQuorum(shardSets); err != ErrMismatchedThreshold {
+		t.Fatalf("expected ErrMismatchedThreshold, got %v", err)
+	}
+}
+
+func TestReconstructQuorumInvalidThreshold(t *testing.T) {
+	q, err := NewQuorum()
+	if err != nil {
+		t.Fatalf("NewQuorum failed: %v", err)
+	}
+
+	shardSets, err := q.MakeKeyshards(5, 3)
+	if err != nil {
+		t.Fatalf("MakeKeyshards failed: %v", err)
+	}
+	shardSets[0].Shard.Threshold = 1
+
+	if _, err := ReconstructQuorum(shardSets); err != ErrInvalidThreshold {
+		t.Fatalf("expected ErrInvalidThreshold, got %v", err)
+	}
+}
+
 func TestReconstructQuorumPublicKeyMismatch(t *testing.T) {
 	q1, err := NewQuorum()
 	if err != nil {

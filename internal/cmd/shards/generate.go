@@ -28,9 +28,7 @@ func generateCommand() *cobra.Command {
 			}
 
 			for _, shardSet := range shardSets {
-				shard := shardSet.Shard
-
-				m, err := paper.GetKeyshard(shard)
+				m, err := paper.GetKeyshard(shardSet.Shard)
 				if err != nil {
 					return err
 				}
@@ -40,7 +38,7 @@ func generateCommand() *cobra.Command {
 					return err
 				}
 
-				if err := document.Save(fmt.Sprintf("keyshard-%d.pdf", shard.ID)); err != nil {
+				if err := document.Save(fmt.Sprintf("keyshard-%d.pdf", shardSet.Shard.ID)); err != nil {
 					return err
 				}
 

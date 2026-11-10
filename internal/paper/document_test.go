@@ -79,7 +79,7 @@ func TestChunkDocumentData(t *testing.T) {
 				t.Fatalf("payload is too large: %d bytes", len(encoded))
 			}
 
-			var decoded payload.Payload
+			var decoded payload.Document
 			if err := decoded.UnmarshalText(encoded); err != nil {
 				t.Fatalf("unmarshal failed: %v", err)
 			}
