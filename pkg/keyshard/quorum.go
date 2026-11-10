@@ -31,6 +31,7 @@ const (
 // the split secret, so reconstruction cannot issue new shards.
 type Quorum struct {
 	sealed     bool
+	ID         []byte
 	Key        []byte
 	SigningKey ed25519.PrivateKey
 }
@@ -41,12 +42,13 @@ func NewQuorum() (*Quorum, error) {
 	key := make([]byte, QuorumKeySize)
 	rand.Read(key)
 
-	_, signKey, err := ed25519.GenerateKey(rand.Reader)
+	signPubKey, signKey, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Quorum{
+		ID:         signPubKey,
 		Key:        key,
 		SigningKey: signKey,
 	}, nil
@@ -148,9 +150,10 @@ func ReconstructQuorum(shardSets []ShardSet) (*Quorum, error) {
 	}
 
 	return &Quorum{
+		sealed:     sealed,
+		ID:         pub,
 		Key:        key,
 		SigningKey: signKey,
-		sealed:     sealed,
 	}, nil
 }
 

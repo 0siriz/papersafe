@@ -130,16 +130,16 @@ func MakeKeyshard(share shamir.Share, signKey ed25519.PrivateKey) (ShardSet, err
 	nonce := make([]byte, NonceSize)
 	rand.Read(nonce)
 
-	pubSignKey := signKey.Public().(ed25519.PublicKey)
+	signPubKey := signKey.Public().(ed25519.PublicKey)
 
 	additionalData := make([]byte, 0, PublicKeySize+IDSize)
-	additionalData = append(additionalData, pubSignKey...)
+	additionalData = append(additionalData, signPubKey...)
 	additionalData = append(additionalData, share.X)
 
 	content := aead.Seal(nil, nonce, share.Y, additionalData)
 
 	signData := make([]byte, 0, PublicKeySize+IDSize+NonceSize+len(content))
-	signData = append(signData, pubSignKey...)
+	signData = append(signData, signPubKey...)
 	signData = append(signData, share.X)
 	signData = append(signData, nonce...)
 	signData = append(signData, content...)
@@ -147,7 +147,7 @@ func MakeKeyshard(share shamir.Share, signKey ed25519.PrivateKey) (ShardSet, err
 	signature := ed25519.Sign(signKey, signData)
 
 	keyshard := KeyShard{
-		PublicKey: pubSignKey,
+		PublicKey: signPubKey,
 		ID:        share.X,
 		Nonce:     nonce,
 		Content:   content,
