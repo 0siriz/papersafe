@@ -14,5 +14,6 @@ SCOPES=(
 	"mnemonic"
 	"keyshard"
 	"paper"
+	"encoding"
 )
 SUBJECT_MAX=50
