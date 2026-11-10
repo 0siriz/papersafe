@@ -1,16 +1,18 @@
 package paper
 
 import (
-	"encoding/base32"
 	"strings"
+
+	"github.com/johnfercher/maroto/v2"
+	"github.com/johnfercher/maroto/v2/pkg/config"
+	"github.com/johnfercher/maroto/v2/pkg/core"
+	"github.com/johnfercher/maroto/v2/pkg/props"
 )
 
 const (
 	segmentSize    = 5
 	segmentSpacing = 1
 )
-
-var zbase32 = base32.NewEncoding("ybndrfg8ejkmcpqxot1uwisza345h769").WithPadding(base32.NoPadding)
 
 func segment(text string) string {
 	var result strings.Builder
@@ -23,4 +25,20 @@ func segment(text string) string {
 	}
 
 	return result.String()
+}
+
+// newMaroto creates a Maroto instance using the embedded Liberation Mono fonts
+// as the default font family.
+func newMaroto() (core.Maroto, error) {
+	customFonts, err := loadCustomFonts()
+	if err != nil {
+		return nil, err
+	}
+
+	cfg := config.NewBuilder().
+		WithCustomFonts(customFonts).
+		WithDefaultFont(&props.Font{Family: liberationMono}).
+		Build()
+
+	return maroto.New(cfg), nil
 }

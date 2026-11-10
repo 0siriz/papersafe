@@ -1,8 +1,10 @@
 package paper
 
 import (
-	"strconv"
+	"fmt"
 
+	"github.com/0siriz/papersafe/internal/encoding/payload"
+	"github.com/0siriz/papersafe/internal/encoding/zbase32"
 	"github.com/0siriz/papersafe/pkg/keyshard"
 	"github.com/johnfercher/maroto/v2/pkg/components/code"
 	"github.com/johnfercher/maroto/v2/pkg/components/line"
@@ -26,7 +28,7 @@ func GetKeyshard(shard keyshard.KeyShard) (core.Maroto, error) {
 		}),
 	)
 	m.AddRow(8,
-		text.NewCol(12, segment(zbase32.EncodeToString(shard.PublicKey)), props.Text{
+		text.NewCol(12, segment(zbase32.StdEncoding.EncodeToString(shard.PublicKey)), props.Text{
 			Size:   12,
 			Family: liberationMono,
 		}),
@@ -39,7 +41,7 @@ func GetKeyshard(shard keyshard.KeyShard) (core.Maroto, error) {
 		}),
 	)
 	m.AddRow(8,
-		text.NewCol(12, strconv.Itoa(int(shard.ID&0xFF)), props.Text{
+		text.NewCol(12, fmt.Sprintf("%02x", shard.ID), props.Text{
 			Size:   12,
 			Family: liberationMono,
 		}),
@@ -65,13 +67,19 @@ func GetKeyshard(shard keyshard.KeyShard) (core.Maroto, error) {
 		return nil, err
 	}
 
+	shardPayload := payload.NewKeyshard(shard.ID, shardData)
+	shardPayloadData, err := shardPayload.MarshalText()
+	if err != nil {
+		return nil, err
+	}
+
 	m.AddRow(80,
 		code.NewQrCol(6,
-			string(shardData),
+			string(shardPayloadData),
 			props.Rect{
 				Center: true,
 			}),
-		text.NewCol(6, segment(zbase32.EncodeToString(shardData)), props.Text{
+		text.NewCol(6, segment(zbase32.StdEncoding.EncodeToString(shardData)), props.Text{
 			Size:   12,
 			Family: liberationMono,
 		}),
