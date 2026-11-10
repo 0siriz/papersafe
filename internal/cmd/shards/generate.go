@@ -29,6 +29,7 @@ func generateCommand() *cobra.Command {
 
 			for _, shardSet := range shardSets {
 				shard := shardSet.Shard
+
 				m, err := paper.GetKeyshard(shard)
 				if err != nil {
 					return err

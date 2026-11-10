@@ -4,12 +4,8 @@ import (
 	"embed"
 	"fmt"
 
-	"github.com/johnfercher/maroto/v2"
-	"github.com/johnfercher/maroto/v2/pkg/config"
 	"github.com/johnfercher/maroto/v2/pkg/consts/fontstyle"
-	"github.com/johnfercher/maroto/v2/pkg/core"
 	"github.com/johnfercher/maroto/v2/pkg/core/entity"
-	"github.com/johnfercher/maroto/v2/pkg/props"
 )
 
 //go:embed fonts/*.ttf
@@ -17,22 +13,6 @@ var fontsFS embed.FS
 
 // liberationMono is the family name for the embedded Liberation Mono fonts.
 const liberationMono = "liberationmono"
-
-// newMaroto creates a Maroto instance using the embedded Liberation Mono fonts
-// as the default font family.
-func newMaroto() (core.Maroto, error) {
-	customFonts, err := loadCustomFonts()
-	if err != nil {
-		return nil, err
-	}
-
-	cfg := config.NewBuilder().
-		WithCustomFonts(customFonts).
-		WithDefaultFont(&props.Font{Family: liberationMono}).
-		Build()
-
-	return maroto.New(cfg), nil
-}
 
 // loadCustomFonts reads the embedded Liberation Mono fonts and registers all
 // styles under the liberationMono font family.
