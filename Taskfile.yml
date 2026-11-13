@@ -11,7 +11,7 @@ tasks:
   build:
     desc: Build all binaries
     cmds:
-      - go build -buildmode=pie -trimpath -o "{{.BINDIR}}/papersafe" ./cmd/papersafe
+      - CGO_ENABLED=false go build -buildmode=pie -trimpath -o "{{.BINDIR}}/papersafe" ./cmd/papersafe
     sources:
       - "**/*.go"
       - go.mod
