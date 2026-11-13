@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/0siriz/papersafe/internal/cmd/backup"
 	"github.com/0siriz/papersafe/internal/cmd/restore"
 	"github.com/0siriz/papersafe/internal/cmd/shards"
@@ -8,8 +11,10 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "papersafe",
-	Short: "Papersafe: Generate secure offline paper backups",
+	Use:           "papersafe",
+	Short:         "Papersafe: Generate secure offline paper backups",
+	SilenceErrors: true,
+	SilenceUsage:  true,
 	CompletionOptions: cobra.CompletionOptions{
 		HiddenDefaultCmd: true,
 	},
@@ -18,7 +23,8 @@ var rootCmd = &cobra.Command{
 // main is the papersafe CLI entry point.
 func main() {
 	if err := rootCmd.Execute(); err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
 	}
 }
 
